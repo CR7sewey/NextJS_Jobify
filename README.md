@@ -45,11 +45,6 @@ npx create-next-app@latest projectName
 
 - choose typescript and eslint
 
-## Assets
-
-- main course repo
-  - nextjs-jobify-app/assets
-
 ## Libraries
 
 ```sh
@@ -90,6 +85,86 @@ export default function Home() {
         <Camera />
       </Button>
     </div>
+  );
+}
+```
+
+## Challenge - Build the Home Page (app/page.tsx)
+
+1. **Import necessary modules and components:**
+
+   - Import the `Image` component from 'next/image' for displaying images.
+   - Import the `Logo` and `LandingImg` SVG files from the assets directory.
+   - Import the `Button` component from the UI components directory.
+   - Import the `Link` component from 'next/link' for navigation.
+
+2. **Define the `Home` component:**
+
+   - This component doesn't receive any props.
+
+3. **Inside the `Home` component, return the JSX:**
+
+   - The main wrapper is a `main` HTML element.
+   - Inside `main`, there are two main sections: `header` and `section`.
+   - The `header` contains the `Image` component that displays the `Logo`.
+   - The `section` contains a `div` and an `Image` component.
+   - The `div` contains a `h1` heading, a `p` paragraph, and a `Button` component.
+   - The `Button` component wraps a `Link` component that navigates to the '/add-job' route when clicked.
+   - The `Image` component displays the `LandingImg`.
+
+4. **Apply CSS classes for styling:**
+
+   - CSS classes are applied to the elements for styling. These classes are from Tailwind CSS, a utility-first CSS framework.
+
+5. **Export the `Home` component as the default export of the module.**
+
+## Layout and Home Page
+
+- setup title and description
+- add favicon
+- setup home page
+
+layout.tsx
+
+```tsx
+export const metadata: Metadata = {
+  title: "Jobify Dev",
+  description: "Job application tracking system for job hunters",
+};
+```
+
+page.tsx
+
+```tsx
+import Image from "next/image";
+import Logo from "../assets/logo.svg";
+import LandingImg from "../assets/main.svg";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+export default function Home() {
+  return (
+    <main>
+      <header className="max-w-6xl mx-auto px-4 sm:px-8 py-6 ">
+        <Image src={Logo} alt="logo" />
+      </header>
+      <section className="max-w-6xl mx-auto px-4 sm:px-8 h-screen -mt-20 grid lg:grid-cols-[1fr,400px] items-center">
+        <div>
+          <h1 className="capitalize text-4xl md:text-7xl font-bold">
+            job <span className="text-primary">tracking</span> app
+          </h1>
+          <p className="leading-loose max-w-md mt-4 ">
+            Welcome to Jobify app. This is the best place for you to find your
+            dream job. Software Engineer? Data Scientist? Economist? Accountant?
+            Doesn't Matter. Here, we have every single opportunity for you to
+            view it, love it and then, apply to it!
+          </p>
+          <Button asChild className="mt-4">
+            <Link href="/add-job">Get Started</Link>
+          </Button>
+        </div>
+        <Image src={LandingImg} alt="landing" className="hidden lg:block " />
+      </section>
+    </main>
   );
 }
 ```

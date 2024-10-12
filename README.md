@@ -168,3 +168,85 @@ export default function Home() {
   );
 }
 ```
+
+## Favicon and Logo (optional)
+
+- [Favicon](https://favicon.io/)
+- [Undraw](https://undraw.co/)
+- [Logo - Figma File](https://www.figma.com/community/file/1319010578601364983/jobify-logo-public)
+
+## Challenge - Setup Dashboard Pages
+
+- create add-job, jobs and stats pages
+- group them in (dashboard)
+- setup a layout file (just pass children)
+
+## Dashboard Pages
+
+- create add-job, jobs and stats pages
+- group them in (dashboard)
+- setup a layout file (just pass children)
+
+(dashboard)/layout.tsx
+
+```tsx
+function layout({ children }: { children: React.ReactNode }) {
+  return <div>{children}</div>;
+}
+export default layout;
+```
+
+## Challenge - Add Clerk Auth
+
+- setup new app, configure fields - (or use existing)
+- add ENV Vars
+- wrap layout in Clerk Provider
+- add middleware
+- set only home page public
+- restart dev server
+
+## Clerk Auth
+
+- setup new app, configure fields - (or use existing)
+- add ENV Vars
+- wrap layout
+- add middleware
+- make '/' public
+- restart dev server
+
+layout.tsx
+
+```tsx
+import { ClerkProvider } from "@clerk/nextjs";
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <ClerkProvider>
+      <html lang="en">
+        <body className={inter.className}>{children}</body>
+      </html>
+    </ClerkProvider>
+  );
+}
+```
+
+middleware.tsx
+
+```tsx
+import { authMiddleware } from "@clerk/nextjs";
+
+// This example protects all routes including api/trpc routes
+// Please edit this to allow other routes to be public as needed.
+// See https://clerk.com/docs/references/nextjs/auth-middleware for more information about configuring your Middleware
+export default authMiddleware({
+  publicRoutes: ["/"],
+});
+
+export const config = {
+  matcher: ["/((?!.+\\.[\\w]+$|_next).*)", "/", "/(api|trpc)(.*)"],
+};
+```

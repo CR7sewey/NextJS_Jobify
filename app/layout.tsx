@@ -23,7 +23,7 @@ export default function RootLayout({
       <html lang="en" suppressHydrationWarning>
         <body className={inter.className}>
           <Providers>
-            <Containers className="py-2">{children}</Containers>
+            <Containers>{children}</Containers>
           </Providers>
         </body>
       </html>

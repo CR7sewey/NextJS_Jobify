@@ -15,7 +15,7 @@ export default function Navbar() {
         <div className="flex items-center gap-x-4">
           <ThemeToggle />
           <UserButton />
-          <LogoutDropdown />
+          {/*<LogoutDropdown />*/}
         </div>
       </nav>
     </>

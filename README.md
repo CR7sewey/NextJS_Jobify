@@ -480,3 +480,223 @@ function Navbar() {
 }
 export default Navbar;
 ```
+
+## Challenge - Build LinksDropdown Component
+
+1. **Explore the Dropdown-Menu Component:**
+
+   - Explore the dropdown-menu component in the shadcn library.
+
+2. **Install the Dropdown-Menu Component:**
+
+   - Install it using `npx shadcn@latest add dropdown-menu`
+
+3. **Import necessary modules and components:**
+
+   - Import `DropdownMenu`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuTrigger` from the dropdown-menu component.
+   - Import `AlignLeft` from 'lucide-react' for the menu icon.
+   - Import `Button` from the local UI components.
+   - Import `links` from the local utilities.
+   - Import `Link` from 'next/link' for navigation.
+
+4. **Define the `DropdownLinks` function component:**
+
+   - This component doesn't receive any props.
+
+5. **Inside the `DropdownLinks` component, return the JSX:**
+
+   - The main wrapper is the `DropdownMenu` component.
+   - Inside `DropdownMenu`, there is a `DropdownMenuTrigger` component that triggers the dropdown menu. It has a `Button` component with an `AlignLeft` icon. This button is hidden on large screens.
+   - The `DropdownMenuContent` component contains the dropdown menu items. Each item is a `DropdownMenuItem` component that wraps a `Link` component. The `Link` component navigates to the link's `href` when clicked.
+
+6. **Export the `DropdownLinks` component:**
+   - The `DropdownLinks` component is exported as the default export of the module. This allows it to be imported in other files using the file path.
+
+## LinksDropdown
+
+- [docs](https://ui.shadcn.com/docs/components/dropdown-menu)
+
+```sh
+npx shadcn@latest add dropdown-menu
+```
+
+LinksDropdown.tsx
+
+```tsx
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { AlignLeft } from "lucide-react";
+import { Button } from "./ui/button";
+import links from "@/utils/links";
+import Link from "next/link";
+function DropdownLinks() {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild className="lg:hidden">
+        <Button variant="outline" size="icon">
+          <AlignLeft />
+
+          <span className="sr-only">Toggle links</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        className="w-52 lg:hidden "
+        align="start"
+        sideOffset={25}
+      >
+        {links.map((link) => {
+          return (
+            <DropdownMenuItem key={link.href}>
+              <Link href={link.href} className="flex items-center gap-x-2 ">
+                {link.icon} <span className="capitalize">{link.label}</span>
+              </Link>
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+export default DropdownLinks;
+```
+
+## Challenge - Add New Theme
+
+- reference shadcn docs
+
+[Theming](https://ui.shadcn.com/docs/theming)
+[Themes](https://ui.shadcn.com/themes)
+
+- setup theme in globals.css
+
+## Challenge - Setup providers.tsx
+
+- create providers.tsx
+- wrap children in layout
+- add suppressHydrationWarning prop
+
+## Providers
+
+- create providers.tsx
+- wrap children in layout
+- add suppressHydrationWarning prop
+
+app/providers.tsx
+
+```tsx
+"use client";
+
+const Providers = ({ children }: { children: React.ReactNode }) => {
+  return <>{children}</>;
+};
+export default Providers;
+```
+
+app/layout
+
+```tsx
+<html lang="en" suppressHydrationWarning>
+  <body className={inter.className}>
+    <Providers>{children}</Providers>
+  </body>
+</html>
+```
+
+## Challenge - Add Dark Mode
+
+- reference shadcn docs and setup dark theme
+  [Dark Mode](https://ui.shadcn.com/docs/dark-mode/next)
+
+## Dark Mode
+
+[Dark Mode](https://ui.shadcn.com/docs/dark-mode/next)
+
+```sh
+npm install next-themes
+
+```
+
+components/theme-provider.tsx
+
+```tsx
+"use client";
+
+import * as React from "react";
+import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { type ThemeProviderProps } from "next-themes/dist/types";
+
+export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
+  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
+}
+```
+
+app/providers.tsx
+
+```tsx
+"use client";
+import { ThemeProvider } from "@/components/theme-provider";
+const Providers = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+      >
+        {children}
+      </ThemeProvider>
+    </>
+  );
+};
+export default Providers;
+```
+
+ThemeToggle.tsx
+
+```tsx
+"use client";
+
+import * as React from "react";
+import { Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
+
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+export function ModeToggle() {
+  const { setTheme } = useTheme();
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="icon">
+          <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+          <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+          <span className="sr-only">Toggle theme</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => setTheme("light")}>
+          Light
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("dark")}>
+          Dark
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("system")}>
+          System
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+```

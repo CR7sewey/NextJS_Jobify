@@ -1,6 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-const isPublicRoute = createRouteMatcher(["/", "/jobs"]);
+const isPublicRoute = createRouteMatcher(["/", "/jobs", "/add-job", "/stats"]);
 
 // checa se é public ou nao. se nao, tem de ter autentificacao
 // invoked for every route

@@ -250,3 +250,233 @@ export const config = {
   matcher: ["/((?!.+\\.[\\w]+$|_next).*)", "/", "/(api|trpc)(.*)"],
 };
 ```
+
+## Challenge - Build the links.tsx Component
+
+1. **Create File and Import necessary modules and components:**
+
+   - create utils/links.tsx
+   - Import the `AreaChart`, `Layers`, and `AppWindow` components from 'lucide-react' for displaying icons.
+
+2. **Define the `NavLink` type:**
+
+   - This type has three properties: `href` (a string), `label` (a string), and `icon` (a React Node).
+
+3. **Define the `links` constant:**
+
+   - This constant is an array of `NavLink` objects.
+   - Each object represents a navigation link with a `href`, `label`, and `icon`.
+
+4. **Define the navigation links:**
+
+   - The first link has a `href` of '/add-job', a `label` of 'add job', and an `icon` of `<Layers />`.
+   - The second link has a `href` of '/jobs', a `label` of 'all jobs', and an `icon` of `<AppWindow />`.
+   - The third link has a `href` of '/stats', a `label` of 'stats', and an `icon` is not defined yet.
+
+5. **Export the `links` constant:**
+   - This constant can be imported in other components to create navigation menus.
+
+## Links Data
+
+- create utils/links.tsx
+
+utils/links.tsx
+
+```tsx
+import { AreaChart, Layers, AppWindow } from "lucide-react";
+
+type NavLink = {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+};
+
+const links: NavLink[] = [
+  {
+    href: "/add-job",
+    label: "add job",
+    icon: <Layers />,
+  },
+  {
+    href: "/jobs",
+    label: "all jobs",
+    icon: <AppWindow />,
+  },
+  {
+    href: "/stats",
+    label: "stats",
+    icon: <AreaChart />,
+  },
+];
+
+export default links;
+```
+
+## Challenge - Dashboard Layout
+
+- create following components :
+
+  - Sidebar
+  - Navbar
+  - LinksDropdown
+  - ThemeToggle
+
+- setup (dashboard/layout.tsx)
+
+1. **Import necessary modules and components:**
+
+   - Import `Navbar` and `Sidebar` components.
+   - Import `PropsWithChildren` from 'react'.
+
+2. **Define the `layout` component:**
+
+   - This component receives `children` as props.
+
+3. **Return the JSX:**
+
+   - The main wrapper is a `main` element with a grid layout.
+   - The first `div` contains the `Sidebar` component and is hidden on small screens.
+   - The second `div` spans 4 columns on large screens and contains the `Navbar` component and the `children`.
+
+4. **Export the `layout` component.**
+   dashboard/layout.tsx
+
+## Dashboard Layout
+
+- create following components :
+
+  - Sidebar
+  - Navbar
+  - LinksDropdown
+  - ThemeToggle
+
+(dashboard/layout.tsx)
+
+```tsx
+import Navbar from "@/components/Navbar";
+import Sidebar from "@/components/Sidebar";
+
+import { PropsWithChildren } from "react";
+
+function layout({ children }: PropsWithChildren) {
+  return (
+    <main className="grid lg:grid-cols-5">
+      {/* first-col hide on small screen */}
+      <div className="hidden lg:block lg:col-span-1 lg:min-h-screen">
+        <Sidebar />
+      </div>
+      {/* second-col hide dropdown on big screen */}
+
+      <div className="lg:col-span-4">
+        <Navbar />
+        <div className="py-16 px-4 sm:px-8 lg:px-16">{children}</div>
+      </div>
+    </main>
+  );
+}
+export default layout;
+```
+
+## Challenge - Build Sidebar Component
+
+1. **Import necessary modules and components:**
+
+   - Import `Logo`, `links`, `Image`, `Link`, `Button`, and `usePathname`.
+
+2. **Define the `Sidebar` component:**
+
+   - Use `usePathname` to get the current route.
+
+3. **Return the JSX:**
+
+   - The main wrapper is an `aside` element.
+   - Inside `aside`, display the `Logo` using `Image`.
+   - Map over `links` to create `Button` components for each link.
+   - Each `Button` wraps a `Link` that navigates to the link's `href`.
+
+4. **Export the `Sidebar` component.**
+
+## Sidebar
+
+- render links and logo
+- check the path, if active use different variant
+  Sidebar.tsx
+
+```tsx
+"use client";
+import Logo from "@/assets/images/logo.svg";
+import links from "@/utils/links";
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "./ui/button";
+import { usePathname } from "next/navigation";
+function Sidebar() {
+  const pathname = usePathname();
+
+  return (
+    <aside className="py-4 px-8 bg-muted h-full">
+      <Image src={Logo} alt="logo" className="mx-auto" />
+      <div className="flex flex-col mt-20 gap-y-4">
+        {links.map((link) => {
+          return (
+            <Button
+              asChild
+              key={link.href}
+              variant={pathname === link.href ? "default" : "link"}
+            >
+              <Link href={link.href} className="flex items-center gap-x-2 ">
+                {link.icon} <span className="capitalize">{link.label}</span>
+              </Link>
+            </Button>
+          );
+        })}
+      </div>
+    </aside>
+  );
+}
+export default Sidebar;
+```
+
+## Challenge - Build Navbar Component
+
+1. **Import necessary modules and components:**
+
+   - Import `LinksDropdown`, `UserButton` from '@clerk/nextjs', and `ThemeToggle`.
+
+2. **Define the `Navbar` component:**
+
+   - This component doesn't receive any props.
+
+3. **Return the JSX:**
+
+   - The main wrapper is a `nav` element with Tailwind CSS classes for styling.
+   - Inside `nav`, there are two `div` elements.
+   - The first `div` contains the `LinksDropdown` component.
+   - The second `div` contains the `ThemeToggle` and `UserButton` components.
+
+4. **Export the `Navbar` component.**
+
+## Navbar
+
+Navbar.tsx
+
+```tsx
+import LinksDropdown from "./LinksDropdown";
+import { UserButton } from "@clerk/nextjs";
+import ThemeToggle from "./ThemeToggle";
+
+function Navbar() {
+  return (
+    <nav className="bg-muted py-4 sm:px-16 lg:px-24 px-4 flex items-center justify-between">
+      <div>
+        <LinksDropdown />
+      </div>
+      <div className="flex items-center gap-x-4">
+        <ThemeToggle />
+        <UserButton afterSignOutUrl="/" />
+      </div>
+    </nav>
+  );
+}
+export default Navbar;
+```

@@ -1,5 +1,11 @@
 import React from "react";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../ui/form";
 import { Control, ControllerRenderProps } from "react-hook-form";
 import { JobMode, JobStatus } from "@/utils/types";
 import {
@@ -24,7 +30,7 @@ type FieldForm = ControllerRenderProps<
 function SelectForm({
   label,
   control,
-  name
+  name,
   values,
 }: {
   label: string;

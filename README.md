@@ -700,3 +700,421 @@ export function ModeToggle() {
   );
 }
 ```
+
+## CreateJobForm Setup
+
+- components/CreateJobForm
+- render in add-job/page.tsx
+
+```sh
+npx shadcn@latest add form input
+```
+
+```tsx
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+
+const formSchema = z.object({
+  username: z.string().min(2, {
+    message: "Username must be at least 2 characters.",
+  }),
+});
+
+function CreateJobForm() {
+  // 1. Define your form.
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      username: "",
+    },
+  });
+
+  // 2. Define a submit handler.
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    // Do something with the form values.
+    // ✅ This will be type-safe and validated.
+    console.log(values);
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <FormField
+          control={form.control}
+          name="username"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Username</FormLabel>
+              <FormControl>
+                <Input placeholder="shadcn" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button type="submit">Submit</Button>
+      </form>
+    </Form>
+  );
+}
+export default CreateJobForm;
+```
+
+### CreateJobForm - Details
+
+1. **Imports:** Necessary modules and components are imported. This includes form handling and validation libraries, UI components, and the zod schema validation library.
+
+2. **Form Schema:** A `formSchema` is defined using zod. This schema specifies that the `username` field is a string and must be at least 2 characters long.
+
+3. **CreateJobForm Component:** This is the main component. It uses the `useForm` hook from `react-hook-form` to create a form instance which can be used to manage form state, handle form submission, and perform form validation. The form instance is configured with the zod schema as its resolver and a default value for the `username` field.
+
+4. **Submit Handler:** A `onSubmit` function is defined. This function logs the form values when the form is submitted. The form values are type-checked and validated against the zod schema.
+
+5. **Render:** The component returns a form with a single `username` field and a submit button. The `username` field is rendered using the `FormField` component, which is passed the form control and the field name. The `render` prop of `FormField` is used to render the actual input field and its associated label and message.
+
+6. **Export:** The `CreateJobForm` component is exported as the default export of the module. This allows it to be imported in other files using the file path.
+
+## Challenge - Create Types
+
+1. **Create utils/types.ts:**
+
+   - Create a new file named `types.ts` inside the `utils` directory.
+
+2. **Define the `JobStatus` and `JobMode` enums:**
+
+   - Define the `JobStatus` enum with the values 'applied', 'interview', 'offer', and 'rejected'.
+   - Define the `JobMode` enum with the values 'fullTime', 'partTime', and 'internship'.
+
+3. **Define the `createAndEditJobSchema` object:**
+
+   - Use `z.object()` from the zod library to define a schema for creating and editing jobs.
+   - The schema includes `position`, `company`, `location`, `status`, and `mode`. Each of these fields is a string with a minimum length of 2 characters, except for `status` and `mode` which are enums.
+
+4. **Export the `createAndEditJobSchema` object:**
+
+   - Export the `createAndEditJobSchema` object so it can be used in other files.
+
+5. **Define and export the `CreateAndEditJobType` type:**
+   - Use `z.infer<typeof createAndEditJobSchema>` to infer the type of the `createAndEditJobSchema` object.
+   - Export the `CreateAndEditJobType` type so it can be used in other files.
+
+Enums in TypeScript are a special type that allows you to define a set of named constants. They can be numeric or string-based.
+
+## Types
+
+- utils/types.ts
+
+```ts
+import * as z from "zod";
+
+export type JobType = {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  clerkId: string;
+  position: string;
+  company: string;
+  location: string;
+  status: string;
+  mode: string;
+};
+
+export enum JobStatus {
+  Pending = "pending",
+  Interview = "interview",
+  Declined = "declined",
+}
+
+export enum JobMode {
+  FullTime = "full-time",
+  PartTime = "part-time",
+  Internship = "internship",
+}
+
+export const createAndEditJobSchema = z.object({
+  position: z.string().min(2, {
+    message: "position must be at least 2 characters.",
+  }),
+  company: z.string().min(2, {
+    message: "company must be at least 2 characters.",
+  }),
+  location: z.string().min(2, {
+    message: "location must be at least 2 characters.",
+  }),
+  status: z.nativeEnum(JobStatus),
+  mode: z.nativeEnum(JobMode),
+});
+
+export type CreateAndEditJobType = z.infer<typeof createAndEditJobSchema>;
+```
+
+## Explore Select Component
+
+- install
+
+```sh
+npx shadcn@latest add select
+```
+
+- [docs](https://ui.shadcn.com/docs/components/select)
+
+## Challenge - FormComponents
+
+1. **Import necessary libraries and components**
+
+   - Import the `Control` type from `react-hook-form`.
+   - Import the `Select`, `SelectContent`, `SelectItem`, `SelectTrigger`, and `SelectValue` components from your UI library.
+   - Import the `FormControl`, `FormField`, `FormItem`, `FormLabel`, and `FormMessage` components from your UI library.
+   - Import the `Input` component from your local UI components.
+
+2. **Define the types for CustomFormField and CustomFormSelect components**
+
+   - Define a type `CustomFormFieldProps` that includes `name` and `control` properties.
+   - Define a type `CustomFormSelectProps` that includes `name`, `control`, `items`, and `labelText` properties.
+
+3. **Define the CustomFormField component**
+
+   - Define a new function component named `CustomFormField` that takes `CustomFormFieldProps` as props.
+
+4. **Create the CustomFormField UI**
+
+   - Inside the `CustomFormField` component, return a `FormField` component.
+   - Pass `control` and `name` to the `FormField` component.
+   - Inside the `FormField` component, render a `FormItem` that contains a `FormLabel`, a `FormControl` with an `Input`, and a `FormMessage`.
+
+5. **Define the CustomFormSelect component**
+
+   - Define a new function component named `CustomFormSelect` that takes `CustomFormSelectProps` as props.
+
+6. **Create the CustomFormSelect UI**
+
+   - Inside the `CustomFormSelect` component, return a `FormField` component.
+   - Pass `control` and `name` to the `FormField` component.
+   - Inside the `FormField` component, render a `FormItem` that contains a `FormLabel`, a `Select` with a `SelectTrigger` and `SelectContent`, and a `FormMessage`.
+   - Inside the `SelectContent`, map over the `items` and return a `SelectItem` for each item.
+
+7. **Export the components**
+   - Export `CustomFormField` and `CustomFormSelect` so they can be used in other parts of your application.
+
+## FormComponents
+
+- components/FormComponents
+
+```tsx
+import { Control } from "react-hook-form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "./ui/input";
+
+type CustomFormFieldProps = {
+  name: string;
+  control: Control<any>;
+};
+
+export function CustomFormField({ name, control }: CustomFormFieldProps) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel className="capitalize">{name}</FormLabel>
+          <FormControl>
+            <Input {...field} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+type CustomFormSelectProps = {
+  name: string;
+  control: Control<any>;
+  items: string[];
+  labelText?: string;
+};
+
+export function CustomFormSelect({
+  name,
+  control,
+  items,
+  labelText,
+}: CustomFormSelectProps) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel className="capitalize">{labelText || name}</FormLabel>
+          <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <FormControl>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+              {items.map((item) => {
+                return (
+                  <SelectItem key={item} value={item}>
+                    {item}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+export default CustomFormSelect;
+```
+
+## Challenge - CreateJobForm
+
+1. **Import necessary libraries and components**
+
+   - Import the `zodResolver` from `@hookform/resolvers/zod` for form validation.
+   - Import the `useForm` hook from `react-hook-form` for form handling.
+   - Import the necessary types and schemas for your form from `@/utils/types`.
+   - Import the `Button` and `Form` components from `@/components/ui`.
+   - Import the `CustomFormField` and `CustomFormSelect` components from `./FormComponents`.
+
+2. **Define the CreateJobForm component**
+
+   - Define a new function component named `CreateJobForm`.
+
+3. **Initialize the form with useForm**
+
+   - Inside the `CreateJobForm` component, use the `useForm` hook to initialize your form.
+   - Pass the `CreateAndEditJobType` for your form data to `useForm`.
+   - Use `zodResolver` with your `createAndEditJobSchema` for form validation.
+
+4. **Define default values for the form**
+
+   - Define default values for your form fields in the `useForm` hook.
+
+5. **Define the form submission handler**
+
+   - Inside the `CreateJobForm` component, define a function for handling form submission.
+   - This function should take the form data as its parameter.
+
+6. **Create the form UI**
+
+   - In the component's return statement, create the form UI using the `Form` component.
+   - Use your custom form field components to create the form fields.
+   - Add a submit button to the form.
+
+7. **Export the CreateJobForm component**
+   - After defining the `CreateJobForm` component, export it so it can be used in other parts of your application.
+
+## CreateJobForm
+
+```tsx
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+
+import {
+  JobStatus,
+  JobMode,
+  createAndEditJobSchema,
+  CreateAndEditJobType,
+} from "@/utils/types";
+
+import { Button } from "@/components/ui/button";
+import { Form } from "@/components/ui/form";
+
+import { CustomFormField, CustomFormSelect } from "./FormComponents";
+
+function CreateJobForm() {
+  // 1. Define your form.
+  const form = useForm<CreateAndEditJobType>({
+    resolver: zodResolver(createAndEditJobSchema),
+    defaultValues: {
+      position: "",
+      company: "",
+      location: "",
+      status: JobStatus.Pending,
+      mode: JobMode.FullTime,
+    },
+  });
+
+  function onSubmit(values: CreateAndEditJobType) {
+    // Do something with the form values.
+    // ✅ This will be type-safe and validated.
+    console.log(values);
+  }
+
+  return (
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="bg-muted p-8 rounded"
+      >
+        <h2 className="capitalize font-semibold text-4xl mb-6">add job</h2>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 items-start">
+          {/* position */}
+          <CustomFormField name="position" control={form.control} />
+          {/* company */}
+          <CustomFormField name="company" control={form.control} />
+          {/* location */}
+          <CustomFormField name="location" control={form.control} />
+
+          {/* job status */}
+          <CustomFormSelect
+            name="status"
+            control={form.control}
+            labelText="job status"
+            items={Object.values(JobStatus)}
+          />
+          {/* job  type */}
+          <CustomFormSelect
+            name="mode"
+            control={form.control}
+            labelText="job mode"
+            items={Object.values(JobMode)}
+          />
+
+          <Button type="submit" className="self-end capitalize">
+            create job
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+}
+export default CreateJobForm;
+```

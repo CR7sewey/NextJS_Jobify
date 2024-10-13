@@ -34,40 +34,48 @@ function CreateJobForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <InputForm
-          control={form.control}
-          name="position"
-          label="Position"
-          placeholder="Ex: Software Engineer"
-        />
-        <InputForm
-          control={form.control}
-          name="company"
-          label="Company"
-          placeholder="Ex: Microsoft"
-        />
-        <InputForm
-          control={form.control}
-          name="location"
-          label="Location"
-          placeholder="Ex: Portugal"
-        />
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="bg-muted p-8 rounded"
+      >
+        <h2 className="capitalize font-semibold text-4xl mb-6">add job</h2>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 items-start">
+          <InputForm
+            control={form.control}
+            name="position"
+            label="Position"
+            placeholder="Ex: Software Engineer"
+          />
+          <InputForm
+            control={form.control}
+            name="company"
+            label="Company"
+            placeholder="Ex: Microsoft"
+          />
+          <InputForm
+            control={form.control}
+            name="location"
+            label="Location"
+            placeholder="Ex: Portugal"
+          />
 
-        <SelectForm
-          control={form.control}
-          name="jobstatus"
-          label="Job Status"
-          values={[JobStatus.Pending, JobStatus.Interview, JobStatus.Declined]}
-        />
-        <SelectForm
-          control={form.control}
-          name="jobmode"
-          label="Job Mode"
-          values={[JobMode.FullTime, JobMode.PartTime, JobMode.Internship]}
-        />
+          <SelectForm
+            control={form.control}
+            name="jobstatus"
+            label="Job Status"
+            values={Object.values(JobStatus)}
+          />
+          <SelectForm
+            control={form.control}
+            name="jobmode"
+            label="Job Mode"
+            values={Object.values(JobMode)}
+          />
 
-        <Button type="submit">Submit</Button>
+          <Button type="submit" className="self-end capitalize">
+            create job
+          </Button>
+        </div>
       </form>
     </Form>
   );

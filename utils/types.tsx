@@ -49,8 +49,8 @@ export const createAndEditJobSchema = z.object({
     .max(25, {
       message: "Location must be at max 25 characters.",
     }),
-  jobstatus: z.nativeEnum(JobStatus),
-  jobmode: z.nativeEnum(JobMode),
+  status: z.nativeEnum(JobStatus),
+  mode: z.nativeEnum(JobMode),
 });
 
 export type CreateAndEditJobType = z.infer<typeof createAndEditJobSchema>;

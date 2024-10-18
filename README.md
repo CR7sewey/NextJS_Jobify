@@ -1118,3 +1118,193 @@ function CreateJobForm() {
 }
 export default CreateJobForm;
 ```
+
+## Create DB in Render
+
+- create .env
+- add to .gitignore
+- copy external URL
+  DATABASE_URL =
+
+## Challenge - Setup Prisma
+
+- setup new prisma instance
+- setup connection file
+- create Job model
+
+```prisma
+model Job {
+  id        String      @id @default(uuid())
+  clerkId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  position    String
+  company   String
+  location  String
+  status      String
+  mode     String
+}
+```
+
+- push changes to render
+
+## Setup Prisma
+
+- setup new prisma instance
+
+```sh
+npx prisma init
+```
+
+- setup connection file
+
+utils/db.ts
+
+```ts
+import { PrismaClient } from "@prisma/client";
+
+const prismaClientSingleton = () => {
+  return new PrismaClient();
+};
+
+type PrismaClientSingleton = ReturnType<typeof prismaClientSingleton>;
+
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClientSingleton | undefined;
+};
+
+const prisma = globalForPrisma.prisma ?? prismaClientSingleton();
+
+export default prisma;
+
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+```
+
+- create Job model
+
+schema.prisma
+
+```prisma
+/ This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Job {
+  id        String      @id @default(uuid())
+  clerkId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  position    String
+  company   String
+  location  String
+  status      String
+  mode     String
+}
+
+```
+
+- push changes to render
+
+```sh
+npx prisma db push
+```
+
+## Challenge - CreateJobAction
+
+1. **Import necessary libraries and modules**
+
+   - Create utils/action.ts file
+   - Import the prisma instance from your database configuration file.
+   - Import the auth function from `@clerk/nextjs` for user authentication.
+   - Import the necessary types and schemas from your types file.
+   - Import the redirect function from `next/navigation` for redirection.
+   - Import the `Prisma` namespace from `@prisma/client` for database operations.
+   - Import `dayjs` for date and time manipulation.
+
+2. **Define the authenticateAndRedirect function**
+
+   - Define a function named `authenticateAndRedirect` that doesn't take any parameters.
+   - Inside this function, call the auth function and destructure `userId` from its return value.
+   - If `userId` is not defined, call the redirect function with `'/'` as the argument to redirect the user to the home page.
+   - Return `userId`.
+
+3. **Define the createJobAction function**
+
+   - Define an asynchronous function named `createJobAction` that takes values of type `CreateAndEditJobType` as a parameter.
+   - This function should return a Promise that resolves to `JobType` or null.
+
+4. **Authenticate the user and validate the form values**
+
+   - Inside the `createJobAction` function, call `authenticateAndRedirect` and store its return value in `userId`.
+   - Call `createAndEditJobSchema.parse` with `values` as the argument to validate the form values.
+
+5. **Create a new job in the database**
+
+   - Use the `prisma.job.create` method to create a new job in the database.
+   - Pass an object to this method with a `data` property.
+   - The `data` property should be an object that spreads the `values` and adds a `clerkId` property with `userId` as its value.
+   - Store the return value of this method in `job`.
+
+6. **Handle errors**
+
+   - Wrap the validation and database operation in a try-catch block.
+   - If an error occurs, log the error to the console and return null.
+
+7. **Return the new job**
+
+   - After the try-catch block, return `job`.
+
+8. **Export the createJobAction function**
+   - Export `createJobAction` so it can be used in other parts of your application.
+
+## CreateJobAction
+
+- utils/actions
+
+```ts
+"use server";
+
+import prisma from "./db";
+import { auth } from "@clerk/nextjs";
+import { JobType, CreateAndEditJobType, createAndEditJobSchema } from "./types";
+import { redirect } from "next/navigation";
+import { Prisma } from "@prisma/client";
+import dayjs from "dayjs";
+
+function authenticateAndRedirect(): string {
+  const { userId } = auth();
+  if (!userId) {
+    redirect("/");
+  }
+  return userId;
+}
+
+export async function createJobAction(
+  values: CreateAndEditJobType
+): Promise<JobType | null> {
+  // await new Promise((resolve) => setTimeout(resolve, 3000));
+  const userId = authenticateAndRedirect();
+  try {
+    createAndEditJobSchema.parse(values);
+    const job: JobType = await prisma.job.create({
+      data: {
+        ...values,
+
+        clerkId: userId,
+      },
+    });
+    return job;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+```

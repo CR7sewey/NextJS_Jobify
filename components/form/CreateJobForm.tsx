@@ -11,6 +11,7 @@ import {
 } from "@/utils/types";
 import InputForm from "./InputForm";
 import SelectForm from "./SelectForm";
+import { createJobAction } from "@/utils/actions";
 
 function CreateJobForm() {
   // 1. Define your form.
@@ -29,7 +30,10 @@ function CreateJobForm() {
   function onSubmit(values: CreateAndEditJobType) {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
-    console.log(values);
+    // console.log(values);
+    const create = async () => {
+      await createJobAction(values);
+    };
   }
 
   return (

@@ -12,6 +12,9 @@ import {
 import InputForm from "./InputForm";
 import SelectForm from "./SelectForm";
 import { createJobAction } from "@/utils/actions";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/use-toast";
 
 function CreateJobForm() {
   // 1. Define your form.
@@ -21,19 +24,44 @@ function CreateJobForm() {
       position: "",
       company: "",
       location: "",
-      jobstatus: JobStatus.Pending,
-      jobmode: JobMode.FullTime,
+      status: JobStatus.Pending,
+      mode: JobMode.FullTime,
     },
   });
+  const { toast } = useToast();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const { mutate: createJob, isPending } = useMutation({
+    mutationFn: (values: CreateAndEditJobType) => createJobAction(values),
+    onSuccess: (data) => {
+      if (!data) {
+        toast({
+          description: "there was an error",
+        });
+        return;
+      }
+      toast({ description: "job created" });
+      queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      queryClient.invalidateQueries({ queryKey: ["stats"] });
+      queryClient.invalidateQueries({ queryKey: ["charts"] });
+      router.push("/jobs");
+    },
+    onError: () => {
+      toast({
+        description: "there was an error",
+      });
+    },
+  });
+
+  // const { createJob, isPending } = useCreateJob();
 
   // 2. Define a submit handler.
   function onSubmit(values: CreateAndEditJobType) {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
     // console.log(values);
-    const create = async () => {
-      await createJobAction(values);
-    };
+    createJob(values);
   }
 
   return (
@@ -76,8 +104,12 @@ function CreateJobForm() {
             values={Object.values(JobMode)}
           />
 
-          <Button type="submit" className="self-end capitalize">
-            create job
+          <Button
+            type="submit"
+            className="self-end capitalize"
+            disabled={isPending}
+          >
+            {isPending ? "loading..." : "create job"}
           </Button>
         </div>
       </form>

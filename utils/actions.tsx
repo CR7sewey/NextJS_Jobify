@@ -15,7 +15,7 @@ export const createJobAction = async (
     });
     return job;
   } catch (e) {
-    console.log(e);
+    console.error(e);
 
     return null;
   }

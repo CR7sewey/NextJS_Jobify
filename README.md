@@ -1308,3 +1308,482 @@ export async function createJobAction(
   }
 }
 ```
+
+## Explore Toast Component
+
+- install
+
+```sh
+npx shadcn@latest add toast
+
+```
+
+[docs](https://ui.shadcn.com/docs/components/toast)
+
+## Challenge - Add React Query and Toaster
+
+- add React Query and Toaster to providers.tsx
+- wrap Home Page in React Query
+
+## Add React Query and Toaster
+
+- app/provider
+
+```tsx
+"use client";
+
+import { ThemeProvider } from "@/components/theme-provider";
+import { useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { Toaster } from "@/components/ui/toaster";
+
+const Providers = ({ children }: { children: React.ReactNode }) => {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            // With SSR, we usually want to set some default staleTime
+            // above 0 to avoid refetching immediately on the client
+            staleTime: 60 * 1000 * 5,
+          },
+        },
+      })
+  );
+
+  return (
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange
+    >
+      <Toaster />
+      <QueryClientProvider client={queryClient}>
+        {children}
+        <ReactQueryDevtools initialIsOpen={false} />
+      </QueryClientProvider>
+    </ThemeProvider>
+  );
+};
+export default Providers;
+```
+
+- add-job/page
+
+```tsx
+import CreateJobForm from "@/components/CreateJobForm";
+import {
+  dehydrate,
+  HydrationBoundary,
+  QueryClient,
+} from "@tanstack/react-query";
+
+function AddJobPage() {
+  const queryClient = new QueryClient();
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <CreateJobForm />
+    </HydrationBoundary>
+  );
+}
+export default AddJobPage;
+```
+
+## CreateJobForm Complete
+
+```tsx
+// imports
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createJobAction } from "@/utils/actions";
+import { useToast } from "@/components/ui/use-toast";
+import { useRouter } from "next/navigation";
+
+// logic
+const queryClient = useQueryClient();
+const { toast } = useToast();
+const router = useRouter();
+const { mutate, isPending } = useMutation({
+  mutationFn: (values: CreateAndEditJobType) => createJobAction(values),
+  onSuccess: (data) => {
+    if (!data) {
+      toast({
+        description: "there was an error",
+      });
+      return;
+    }
+    toast({ description: "job created" });
+    queryClient.invalidateQueries({ queryKey: ["jobs"] });
+    queryClient.invalidateQueries({ queryKey: ["stats"] });
+    queryClient.invalidateQueries({ queryKey: ["charts"] });
+
+    router.push("/jobs");
+    // form.reset();
+  },
+});
+
+function onSubmit(values: CreateAndEditJobType) {
+  mutate(values);
+}
+// return
+<Button type="submit" className="self-end capitalize" disabled={isPending}>
+  {isPending ? "loading..." : "create job"}
+</Button>;
+```
+
+## Challenge - GetAllJobsAction
+
+1. **Define the getAllJobsAction function**
+
+   - Define an asynchronous function named `getAllJobsAction` that takes an object as a parameter.
+   - This object should have `search`, `jobStatus`, `page`, and `limit` properties.
+   - The `page` and `limit` properties should have default values of 1 and 10, respectively.
+   - This function should return a Promise that resolves to an object with `jobs`, `count`, `page`, and `totalPages` properties.
+
+2. **Authenticate the user**
+
+   - Inside the `getAllJobsAction` function, call `authenticateAndRedirect` and store its return value in `userId`.
+
+3. **Define the whereClause object**
+
+   - Define a `whereClause` object with a `clerkId` property that has `userId` as its value.
+
+4. **Modify the whereClause object based on search and jobStatus**
+
+   - If `search` is defined, add an `OR` property to `whereClause` that is an array of objects.
+   - Each object in the `OR` array should represent a condition where a field contains the search string.
+   - If `jobStatus` is defined and not equal to 'all', add a `status` property to `whereClause` that has `jobStatus` as its value.
+
+5. **Fetch jobs from the database**
+
+   - Use the `prisma.job.findMany` method to fetch jobs from the database.
+   - Pass an object to this method with `where` and `orderBy` properties.
+   - The `where` property should have `whereClause` as its value.
+   - The `orderBy` property should be an object with a `createdAt` property that has 'desc' as its value.
+   - Store the return value of this method in `jobs`.
+
+6. **Handle errors**
+
+   - Wrap the database operation in a try-catch block.
+   - If an error occurs, log the error to the console and return an object with `jobs`, `count`, `page`, and `totalPages` properties, all of which have 0 or [] as their values.
+
+7. **Return the jobs**
+
+   - After the try-catch block, return an object with `jobs`, `count`, `page`, and `totalPages` properties.
+
+8. **Export the getAllJobsAction function**
+   - Export `getAllJobsAction` so it can be used in other parts of your application.
+
+## GetAllJobsAction
+
+- actions
+
+```ts
+type GetAllJobsActionTypes = {
+  search?: string;
+  jobStatus?: string;
+  page?: number;
+  limit?: number;
+};
+
+export async function getAllJobsAction({
+  search,
+  jobStatus,
+  page = 1,
+  limit = 10,
+}: GetAllJobsActionTypes): Promise<{
+  jobs: JobType[];
+  count: number;
+  page: number;
+  totalPages: number;
+}> {
+  const userId = authenticateAndRedirect();
+
+  try {
+    let whereClause: Prisma.JobWhereInput = {
+      clerkId: userId,
+    };
+    if (search) {
+      whereClause = {
+        ...whereClause,
+        OR: [
+          {
+            position: {
+              contains: search,
+            },
+          },
+          {
+            company: {
+              contains: search,
+            },
+          },
+        ],
+      };
+    }
+    if (jobStatus && jobStatus !== "all") {
+      whereClause = {
+        ...whereClause,
+        status: jobStatus,
+      };
+    }
+
+    const jobs: JobType[] = await prisma.job.findMany({
+      where: whereClause,
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return { jobs, count: 0, page: 1, totalPages: 0 };
+  } catch (error) {
+    console.error(error);
+    return { jobs: [], count: 0, page: 1, totalPages: 0 };
+  }
+}
+```
+
+## Challenge - Jobs Page
+
+- create SearchForm, JobsList, JobCard, JobInfo, DeleteJobBtn components
+- setup jobs/loading.tsx
+- wrap jobs/page in React Query and pre-fetch getAllJobsAction
+
+## Jobs Page
+
+- create SearchForm, JobsList, JobCard, JobInfo, DeleteJobBtn
+- setup jobs/loading.tsx
+
+```tsx
+function loading() {
+  return <h2 className="text-xl font-medium capitalize">loading...</h2>;
+}
+export default loading;
+```
+
+JobCard.tsx
+
+```tsx
+import { JobType } from "@/utils/types";
+
+function JobCard({ job }: { job: JobType }) {
+  return <h1 className="text-3xl">JobCard</h1>;
+}
+export default JobCard;
+```
+
+jobs/page.tsx
+
+```tsx
+import JobsList from "@/components/JobsList";
+import SearchForm from "@/components/SearchForm";
+import {
+  dehydrate,
+  HydrationBoundary,
+  QueryClient,
+} from "@tanstack/react-query";
+import { getAllJobsAction } from "@/utils/actions";
+
+async function AllJobsPage() {
+  const queryClient = new QueryClient();
+
+  await queryClient.prefetchQuery({
+    queryKey: ["jobs", "", "all", 1],
+    queryFn: () => getAllJobsAction({}),
+  });
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <SearchForm />
+      <JobsList />
+    </HydrationBoundary>
+  );
+}
+
+export default AllJobsPage;
+```
+
+## Challenge - SearchForm
+
+1. **Import necessary libraries and components**
+
+   - Import the `Input` and `Button` components from your UI library.
+   - Import the `usePathname`, `useRouter`, and `useSearchParams` hooks from `next/navigation`.
+   - Import the `Select`, `SelectContent`, `SelectItem`, `SelectTrigger`, and `SelectValue` components from your UI library.
+   - Import the `JobStatus` type from your types file.
+
+2. **Define the SearchContainer component**
+
+   - Define a function component named `SearchContainer`.
+
+3. **Use hooks to get necessary data**
+
+   - Inside `SearchContainer`, use the `useSearchParams` hook to get the current search parameters.
+   - Use the `get` method of the `searchParams` object to get the `search` and `jobStatus` parameters.
+   - Use the `useRouter` hook to get the router object.
+   - Use the `usePathname` hook to get the current pathname.
+
+4. **Define the form submission handler**
+
+   - Inside `SearchContainer`, define a function named `handleSubmit` for handling form submission.
+   - This function should take an event object as its parameter.
+   - Inside this function, prevent the default form submission behavior.
+   - Create a new `URLSearchParams` object and a new `FormData` object.
+   - Use the `get` method of the `formData` object to get the `search` and `jobStatus` form values.
+   - Use the `set` method of the `params` object to set the `search` and `jobStatus` parameters.
+   - Use the `push` method of the router object to navigate to the current pathname with the new search parameters.
+
+5. **Create the form UI**
+
+   - In the component's return statement, create the form UI using the form element.
+   - Use the `Input` and `Select` components to create the form fields.
+   - Use the `Button` component to create the submit button.
+   - Pass the `handleSubmit` function as the `onSubmit` prop to the form element.
+
+6. **Export the SearchContainer component**
+   - After defining the `SearchContainer` component, export it so it can be used in other parts of your application.
+
+## SearchForm
+
+```tsx
+"use client";
+import { Input } from "./ui/input";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Button } from "./ui/button";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { JobStatus } from "@/utils/types";
+
+function SearchContainer() {
+  // set default values
+  const searchParams = useSearchParams();
+  const search = searchParams.get("search") || "";
+  const jobStatus = searchParams.get("jobStatus") || "all";
+
+  const router = useRouter();
+  const pathname = usePathname();
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    let params = new URLSearchParams();
+
+    const formData = new FormData(e.currentTarget);
+    const search = formData.get("search") as string;
+    const jobStatus = formData.get("jobStatus") as string;
+    params.set("search", search);
+    params.set("jobStatus", jobStatus);
+
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  return (
+    <form
+      className="bg-muted mb-16 p-8 grid sm:grid-cols-2 md:grid-cols-3  gap-4 rounded-lg"
+      onSubmit={handleSubmit}
+    >
+      <Input
+        type="text"
+        placeholder="Search Jobs"
+        name="search"
+        defaultValue={search}
+      />
+      <Select defaultValue={jobStatus} name="jobStatus">
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {["all", ...Object.values(JobStatus)].map((jobStatus) => {
+            return (
+              <SelectItem key={jobStatus} value={jobStatus}>
+                {jobStatus}
+              </SelectItem>
+            );
+          })}
+        </SelectContent>
+      </Select>
+      <Button type="submit">Search</Button>
+    </form>
+  );
+}
+export default SearchContainer;
+```
+
+## Challenge - JobsList
+
+1. **Import necessary libraries and modules**
+
+   - Import the `useSearchParams` hook from `next/navigation`.
+   - Import the `getAllJobsAction` function from your actions file.
+   - Import the `useQuery` hook from `@tanstack/react-query`.
+
+2. **Define the JobsList component**
+
+   - Define a function component named `JobsList`.
+
+3. **Use hooks to get necessary data**
+
+   - Inside `JobsList`, use the `useSearchParams` hook to get the current search parameters.
+   - Use the `get` method of the `searchParams` object to get the `search` and `jobStatus` parameters.
+   - If `search` or `jobStatus` is null, default them to an empty string and 'all', respectively.
+   - Use the `get` method of the `searchParams` object to get the `page` parameter.
+   - If `page` is null, default it to 1.
+
+4. **Fetch the jobs from the server**
+
+   - Use the `useQuery` hook to fetch the jobs from the server.
+   - Pass an object to this hook with `queryKey` and `queryFn` properties.
+   - The `queryKey` property should be an array with 'jobs', `search`, `jobStatus`, and `pageNumber`.
+   - The `queryFn` property should be a function that calls `getAllJobsAction` with an object that has `search`, `jobStatus`, and `page` properties.
+   - Store the return value of this hook in `data` and `isPending`.
+
+5. **Handle loading and empty states**
+
+   - If `isPending` is true, return a `h2` element with 'Please Wait...' as its child.
+   - If `jobs` is an empty array, return a `h2` element with 'No Jobs Found...' as its child.
+
+6. **Export the JobsList component**
+   - After defining the `JobsList` component, export it so it can be used in other parts of your application.
+
+## JobsList
+
+```tsx
+"use client";
+import JobCard from "./JobCard";
+import { useSearchParams } from "next/navigation";
+import { getAllJobsAction } from "@/utils/actions";
+import { useQuery } from "@tanstack/react-query";
+
+function JobsList() {
+  const searchParams = useSearchParams();
+
+  const search = searchParams.get("search") || "";
+  const jobStatus = searchParams.get("jobStatus") || "all";
+
+  const pageNumber = Number(searchParams.get("page")) || 1;
+
+  const { data, isPending } = useQuery({
+    queryKey: ["jobs", search ?? "", jobStatus, pageNumber],
+    queryFn: () => getAllJobsAction({ search, jobStatus, page: pageNumber }),
+  });
+  const jobs = data?.jobs || [];
+
+  if (isPending) return <h2 className="text-xl">Please Wait...</h2>;
+
+  if (jobs.length < 1) return <h2 className="text-xl">No Jobs Found...</h2>;
+  return (
+    <>
+      {/*button container  */}
+      <div className="grid md:grid-cols-2  gap-8">
+        {jobs.map((job) => {
+          return <JobCard key={job.id} job={job} />;
+        })}
+      </div>
+    </>
+  );
+}
+export default JobsList;
+```

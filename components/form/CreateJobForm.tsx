@@ -1,5 +1,5 @@
 "use client";
-import { useForm } from "react-hook-form";
+import { useForm, useFormState } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormField, FormItem } from "../ui/form";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,9 @@ function CreateJobForm() {
   const queryClient = useQueryClient();
 
   const { mutate: createJob, isPending } = useMutation({
-    mutationFn: (values: CreateAndEditJobType) => createJobAction(values),
+    mutationFn: (values: CreateAndEditJobType) => {
+      console.log(values);
+    },
     onSuccess: (data) => {
       if (!data) {
         toast({
@@ -46,6 +48,7 @@ function CreateJobForm() {
       queryClient.invalidateQueries({ queryKey: ["stats"] });
       queryClient.invalidateQueries({ queryKey: ["charts"] });
       router.push("/jobs");
+      return;
     },
     onError: () => {
       toast({

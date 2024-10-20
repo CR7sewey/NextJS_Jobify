@@ -2445,3 +2445,85 @@ main()
     process.exit(1);
   });
 ```
+
+## Challenge - GetStatsAction
+
+1. **Define the getStatsAction function**
+
+   - Define an asynchronous function named `getStatsAction`.
+   - This function should return a Promise that resolves to an object with `pending`, `interview`, and `declined` properties, all of type number.
+
+2. **Authenticate the user**
+
+   - Inside the `getStatsAction` function, call `authenticateAndRedirect` and store its return value in `userId`.
+
+3. **Fetch the job stats from the database**
+
+   - Use the `prisma.job.groupBy` method to fetch the job stats from the database.
+   - Pass an object to this method with `by`, `_count`, and `where` properties.
+   - The `by` property should be an array with 'status'.
+   - The `_count` property should be an object with `status` set to true.
+   - The `where` property should be an object with `clerkId` set to `userId`.
+   - Store the return value of this method in `stats`.
+
+4. **Convert the stats array to an object**
+
+   - Use the `Array.prototype.reduce` method to convert `stats` to an object and store it in `statsObject`.
+   - The initial value of the accumulator should be an empty object.
+   - In each iteration, set the property of the accumulator object with the key of `curr.status` to `curr._count.status`.
+
+5. **Create the default stats object**
+
+   - Create an object `defaultStats` with `pending`, `declined`, and `interview` properties all set to 0.
+   - Use the spread operator to add the properties of `statsObject` to `defaultStats`.
+
+6. **Handle errors**
+
+   - Wrap the database operation and the stats conversion in a try-catch block.
+   - If an error occurs, call `redirect` with '/jobs'.
+
+7. **Return the stats object**
+
+   - After the try-catch block, return `defaultStats`.
+
+8. **Export the getStatsAction function**
+   - Export `getStatsAction` so it can be used in other parts of your application.
+
+## GetStatsAction
+
+```ts
+export async function getStatsAction(): Promise<{
+  pending: number;
+  interview: number;
+  declined: number;
+}> {
+  const userId = authenticateAndRedirect();
+  // just to show Skeleton
+  // await new Promise((resolve) => setTimeout(resolve, 5000));
+  try {
+    const stats = await prisma.job.groupBy({
+      by: ["status"],
+      _count: {
+        status: true,
+      },
+      where: {
+        clerkId: userId, // replace userId with the actual clerkId
+      },
+    });
+    const statsObject = stats.reduce((acc, curr) => {
+      acc[curr.status] = curr._count.status;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const defaultStats = {
+      pending: 0,
+      declined: 0,
+      interview: 0,
+      ...statsObject,
+    };
+    return defaultStats;
+  } catch (error) {
+    redirect("/jobs");
+  }
+}
+```

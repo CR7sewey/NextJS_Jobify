@@ -166,6 +166,34 @@ export async function updateJobAction(
   return job;
 }
 
+export async function getStatsAction(): Promise<{
+  pending: number;
+  interview: number;
+  declined: number;
+}> {
+  const user = await authenticateAndRedirect();
+  try {
+    const stats = await prisma.job.groupBy({
+      by: ["status"],
+      _count: {
+        status: true,
+      },
+      where: {
+        clerkId: user.id,
+      },
+    });
+    const statsObject = stats.reduce((acc, values) => {
+      acc[values.status] = values._count.status;
+      return acc;
+    }, {} as Record<string, number>);
+    let defaultStats = { pending: 0, declined: 0, interview: 0 };
+    defaultStats = { ...defaultStats, ...statsObject };
+    return defaultStats;
+  } catch (e) {
+    redirect("/jobs");
+  }
+}
+
 const renderError = (error: Error | string | unknown): { message: string } => {
   return {
     message: error instanceof Error ? error.message : "An error ocurred...",

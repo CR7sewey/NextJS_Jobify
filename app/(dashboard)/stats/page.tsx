@@ -1,5 +1,7 @@
+import { getStatsAction } from "@/utils/actions";
 import React from "react";
 
-export default function page() {
+export default async function page() {
+  const stats = getStatsAction();
   return <div>page</div>;
 }

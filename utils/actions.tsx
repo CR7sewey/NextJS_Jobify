@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createAndEditJobSchema, CreateAndEditJobType, JobType } from "./types";
 import prisma from "./db";
 import { Prisma } from "@prisma/client";
+import dayjs from "dayjs";
 
 export const createJobAction = async (
   values: CreateAndEditJobType
@@ -189,6 +190,43 @@ export async function getStatsAction(): Promise<{
     let defaultStats = { pending: 0, declined: 0, interview: 0 };
     defaultStats = { ...defaultStats, ...statsObject };
     return defaultStats;
+  } catch (e) {
+    redirect("/jobs");
+  }
+}
+
+type Charts = Array<{ date: string; count: number }>;
+
+export async function getChartsAction(): Promise<Charts | null> {
+  const user = await authenticateAndRedirect();
+  try {
+    const elevenMonthsAgo = dayjs().subtract(11, "months").toDate();
+
+    const jobs = await prisma.job.findMany({
+      where: {
+        createdAt: { gte: elevenMonthsAgo },
+        clerkId: user.id,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+    console.log(jobs);
+    let applicationsPerMonth = jobs.reduce((acc, job) => {
+      const date = dayjs(job.createdAt).format("MMM YY");
+
+      const existingEntry = acc.find((entry) => entry.date === date);
+
+      if (existingEntry) {
+        existingEntry.count += 1;
+      } else {
+        acc.push({ date, count: 1 });
+      }
+
+      return acc;
+    }, [] as Array<{ date: string; count: number }>);
+    console.log(applicationsPerMonth);
+    return applicationsPerMonth;
   } catch (e) {
     redirect("/jobs");
   }

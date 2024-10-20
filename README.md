@@ -2527,3 +2527,167 @@ export async function getStatsAction(): Promise<{
   }
 }
 ```
+
+## Challenge - GetChartsAction
+
+1. **Define the getChartsDataAction function**
+
+   - Define an asynchronous function named `getChartsDataAction`.
+   - This function should return a Promise that resolves to an array of objects, each with `date` and `count` properties.
+
+2. **Authenticate the user**
+
+   - Inside the `getChartsDataAction` function, call `authenticateAndRedirect` and store its return value in `userId`.
+
+3. **Calculate the date six months ago**
+
+   - Use `dayjs` to get the current date, subtract 6 months from it, and convert it to a JavaScript Date object. Store this value in `sixMonthsAgo`.
+
+4. **Fetch the jobs from the database**
+
+   - Use the `prisma.job.findMany` method to fetch the jobs from the database.
+   - Pass an object to this method with `where` and `orderBy` properties.
+   - The `where` property should be an object with `clerkId` and `createdAt` properties.
+   - The `clerkId` property should have `userId` as its value.
+   - The `createdAt` property should be an object with `gte` set to `sixMonthsAgo`.
+   - The `orderBy` property should be an object with `createdAt` set to 'asc'.
+   - Store the return value of this method in `jobs`.
+
+5. **Calculate the number of applications per month**
+
+   - Use the `Array.prototype.reduce` method to calculate the number of applications per month and store it in `applicationsPerMonth`.
+   - In each iteration, format the `createdAt` property of the current job to 'MMM YY' and store it in `date`.
+   - Find an entry in the accumulator with `date` equal to `date` and store it in `existingEntry`.
+   - If `existingEntry` exists, increment its `count` property by 1.
+   - If `existingEntry` does not exist, push a new object to the accumulator with `date` and `count` properties.
+
+6. **Handle errors**
+
+   - Wrap the database operation and the applications per month calculation in a try-catch block.
+   - If an error occurs, call `redirect` with '/jobs'.
+
+7. **Return the applications per month**
+
+   - After the try-catch block, return `applicationsPerMonth`.
+
+8. **Export the getChartsDataAction function**
+   - Export `getChartsDataAction` so it can be used in other parts of your application.
+
+## GetChartsAction
+
+```ts
+export async function getChartsDataAction(): Promise<
+  Array<{ date: string; count: number }>
+> {
+  const userId = authenticateAndRedirect();
+  const sixMonthsAgo = dayjs().subtract(6, "month").toDate();
+  try {
+    const jobs = await prisma.job.findMany({
+      where: {
+        clerkId: userId,
+        createdAt: {
+          gte: sixMonthsAgo,
+        },
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+
+    let applicationsPerMonth = jobs.reduce((acc, job) => {
+      const date = dayjs(job.createdAt).format("MMM YY");
+
+      const existingEntry = acc.find((entry) => entry.date === date);
+
+      if (existingEntry) {
+        existingEntry.count += 1;
+      } else {
+        acc.push({ date, count: 1 });
+      }
+
+      return acc;
+    }, [] as Array<{ date: string; count: number }>);
+
+    return applicationsPerMonth;
+  } catch (error) {
+    redirect("/jobs");
+  }
+}
+```
+
+## Challenge - Stats Page
+
+- create StatsContainer and ChartsContainer components
+- create loading in stats
+- wrap stats page in React Query and pre-fetch
+
+1. **Import necessary libraries and components**
+
+   - Import `ChartsContainer` and `StatsContainer` from your components directory.
+   - Import `getChartsDataAction` and `getStatsAction` from your actions file.
+   - Import `dehydrate`, `HydrationBoundary`, and `QueryClient` from `@tanstack/react-query`.
+
+2. **Define the StatsPage component**
+
+   - Define an asynchronous function component named `StatsPage`.
+
+3. **Initialize the query client**
+
+   - Inside `StatsPage`, create a new instance of `QueryClient` and store it in `queryClient`.
+
+4. **Prefetch the stats and charts data**
+
+   - Use the `queryClient.prefetchQuery` method to prefetch the stats and charts data.
+   - Pass an object to this method with `queryKey` and `queryFn` properties.
+   - The `queryKey` property should be an array with 'stats' or 'charts'.
+   - The `queryFn` property should be a function that calls `getStatsAction` or `getChartsDataAction`.
+
+5. **Create the component UI**
+
+   - In the component's return statement, create the component UI using the `HydrationBoundary`, `StatsContainer`, and `ChartsContainer` components.
+   - Pass the result of calling `dehydrate` with `queryClient` as the `state` prop to `HydrationBoundary`.
+
+6. **Export the StatsPage component**
+   - After defining the `StatsPage` component, export it so it can be used in other parts of your application.
+
+## Stats Page
+
+- create StatsContainer and ChartsContainer components
+
+```tsx
+function loading() {
+  return <h2 className="text-xl font-medium capitalize">loading...</h2>;
+}
+export default loading;
+```
+
+```tsx
+import ChartsContainer from "@/components/ChartsContainer";
+import StatsContainer from "@/components/StatsContainer";
+import { getChartsDataAction, getStatsAction } from "@/utils/actions";
+import {
+  dehydrate,
+  HydrationBoundary,
+  QueryClient,
+} from "@tanstack/react-query";
+
+async function StatsPage() {
+  const queryClient = new QueryClient();
+
+  await queryClient.prefetchQuery({
+    queryKey: ["stats"],
+    queryFn: () => getStatsAction(),
+  });
+  await queryClient.prefetchQuery({
+    queryKey: ["charts"],
+    queryFn: () => getChartsDataAction(),
+  });
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <StatsContainer />
+      <ChartsContainer />
+    </HydrationBoundary>
+  );
+}
+export default StatsPage;
+```

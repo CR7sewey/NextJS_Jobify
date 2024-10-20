@@ -1928,3 +1928,131 @@ JobCard.tsx
   </Badge>
 </CardContent>
 ```
+
+## Challenge - DeleteJobAction
+
+1. **Define the deleteJobAction function**
+
+   - Define an asynchronous function named `deleteJobAction` that takes a string `id` as a parameter.
+   - This function should return a Promise that resolves to a `JobType` object or null.
+
+2. **Authenticate the user**
+
+   - Inside the `deleteJobAction` function, call `authenticateAndRedirect` and store its return value in `userId`.
+
+3. **Delete the job from the database**
+
+   - Use the `prisma.job.delete` method to delete the job from the database.
+   - Pass an object to this method with a `where` property.
+   - The `where` property should be an object with `id` and `clerkId` properties.
+   - The `id` property should have `id` as its value and the `clerkId` property should have `userId` as its value.
+   - Store the return value of this method in `job`.
+
+4. **Handle errors**
+
+   - Wrap the database operation in a try-catch block.
+   - If an error occurs, return null.
+
+5. **Return the deleted job**
+
+   - After the try-catch block, return `job`.
+
+6. **Export the deleteJobAction function**
+   - Export `deleteJobAction` so it can be used in other parts of your application.
+
+## DeleteJobAction
+
+actions
+
+```ts
+export async function deleteJobAction(id: string): Promise<JobType | null> {
+  const userId = authenticateAndRedirect();
+
+  try {
+    const job: JobType = await prisma.job.delete({
+      where: {
+        id,
+        clerkId: userId,
+      },
+    });
+    return job;
+  } catch (error) {
+    return null;
+  }
+}
+```
+
+## Challenge - DeleteJobButton
+
+1. **Import necessary libraries and components**
+
+   - Import the `Button`, `Badge`, `JobInfo`, and `useToast` components from your components directory.
+   - Import the `useMutation` and `useQueryClient` hooks from `@tanstack/react-query`.
+   - Import the `deleteJobAction` function from your actions file.
+
+2. **Define the DeleteJobBtn component**
+
+   - Define a function component named `DeleteJobBtn` that takes an object as a prop.
+   - This object should have an `id` property of type string.
+
+3. **Use hooks to get necessary data and functions**
+
+   - Inside `DeleteJobBtn`, use the `useToast` hook to get the `toast` function.
+   - Use the `useQueryClient` hook to get the `queryClient` object.
+   - Use the `useMutation` hook to get the `mutate` function and `isPending` state.
+   - Pass an object to the `useMutation` hook with `mutationFn` and `onSuccess` properties.
+   - The `mutationFn` property should be a function that takes `id` as a parameter and calls `deleteJobAction` with `id`.
+   - The `onSuccess` property should be a function that takes `data` as a parameter and invalidates the `jobs`, `stats`, and `charts` queries if data is truthy. If data is falsy, it should call `toast` with an object that has a `description` property of 'there was an error'.
+
+4. **Create the component UI**
+
+   - In the component's return statement, create the component UI using the `Button` component.
+   - Pass the `mutate` function as the `onClick` prop to the `Button` component.
+   - Pass `isPending` as the `loading` prop to the `Button` component.
+
+5. **Export the DeleteJobBtn component**
+   - After defining the `DeleteJobBtn` component, export it so it can be used in other parts of your application.
+
+## DeleteJobButton
+
+```tsx
+import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
+import JobInfo from "./JobInfo";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { deleteJobAction } from "@/utils/actions";
+import { useToast } from "@/components/ui/use-toast";
+
+function DeleteJobBtn({ id }: { id: string }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { mutate, isPending } = useMutation({
+    mutationFn: (id: string) => deleteJobAction(id),
+    onSuccess: (data) => {
+      if (!data) {
+        toast({
+          description: "there was an error",
+        });
+        return;
+      }
+      queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      queryClient.invalidateQueries({ queryKey: ["stats"] });
+      queryClient.invalidateQueries({ queryKey: ["charts"] });
+
+      toast({ description: "job removed" });
+    },
+  });
+  return (
+    <Button
+      size="sm"
+      disabled={isPending}
+      onClick={() => {
+        mutate(id);
+      }}
+    >
+      {isPending ? "deleting..." : "delete"}
+    </Button>
+  );
+}
+export default DeleteJobBtn;
+```

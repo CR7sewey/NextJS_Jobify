@@ -89,6 +89,31 @@ export async function getAllJobsAction({
   }
 }
 
+export async function deleteJobAction(id: string): Promise<JobType | null> {
+  const user = await authenticateAndRedirect();
+  try {
+    const job = await prisma.job.findFirst({
+      where: {
+        clerkId: user.id,
+        id,
+      },
+    });
+    if (!job) {
+      throw new Error("No job found!");
+    }
+    await prisma.job.delete({
+      where: {
+        clerkId: user.id,
+        id,
+      },
+    });
+    return job;
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}
+
 const renderError = (error: Error | string | unknown): { message: string } => {
   return {
     message: error instanceof Error ? error.message : "An error ocurred...",

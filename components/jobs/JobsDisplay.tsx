@@ -5,8 +5,10 @@ import { redirect, useSearchParams } from "next/navigation";
 import React from "react";
 import JobCard from "./JobCard";
 import { getJobs } from "@/utils/queryActions";
+import data1 from "../../prisma/data.json";
 
 function JobsDisplay() {
+  console.log(data1);
   const searchParams = useSearchParams();
 
   const search = searchParams.get("search") || "";
@@ -20,7 +22,7 @@ function JobsDisplay() {
     pageNumber,
   });*/
   const { data, isPending, isError } = {
-    data: { jobs: mockData },
+    data: { jobs: data1.data },
     isPending: false,
     isError: false,
   };

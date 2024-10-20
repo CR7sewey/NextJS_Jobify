@@ -1787,3 +1787,144 @@ function JobsList() {
 }
 export default JobsList;
 ```
+
+## Explore - shadcn/ui badge separator and card components
+
+- install
+
+```sh
+npx shadcn@latest add badge separator card
+
+```
+
+[badge](https://ui.shadcn.com/docs/components/badge)
+[separator](https://ui.shadcn.com/docs/components/separator)
+[card](https://ui.shadcn.com/docs/components/card)
+
+## Challenge - JobCard
+
+1. **Import necessary libraries and components**
+
+   - Import the `JobType` type from your types file.
+   - Import the `MapPin`, `Briefcase`, `CalendarDays`, and `RadioTower` components from `lucide-react`.
+   - Import the `Link` component from `next/link`.
+   - Import the `Card`, `CardContent`, `CardDescription`, `CardFooter`, `CardHeader`, and `CardTitle` components from your UI library.
+   - Import the `Separator`, `Button`, `Badge`, `JobInfo`, and `DeleteJobButton` components from your components directory.
+
+2. **Define the JobCard component**
+
+   - Define a function component named `JobCard` that takes an object as a prop.
+   - This object should have a `job` property of type `JobType`.
+
+3. **Convert the job's creation date to a locale string**
+
+   - Inside `JobCard`, create a new Date object with `job.createdAt` as its argument.
+   - Call the `toLocaleDateString` method on this object and store its return value in `date`.
+
+4. **Create the component UI**
+
+   - In the component's return statement, create the component UI using the `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `Separator`, `CardContent`, `CardFooter`, `Button`, `Link`, and `DeleteJobButton` components.
+   - Pass the `job.position` and `job.company` as the children of the `CardTitle` and `CardDescription` components, respectively.
+   - Pass the `job.id` as the `href` prop to the `Link` component.
+   - Pass the `date` as the child of the `CalendarDays` component.
+
+5. **Export the JobCard component**
+   - After defining the `JobCard` component, export it so it can be used in other parts of your application.
+
+## JobCard
+
+JobCard
+
+```tsx
+import { JobType } from "@/utils/types";
+import { MapPin, Briefcase, CalendarDays, RadioTower } from "lucide-react";
+
+import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "./ui/separator";
+import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
+import JobInfo from "./JobInfo";
+import DeleteJobButton from "./DeleteJobButton";
+
+function JobCard({ job }: { job: JobType }) {
+  const date = new Date(job.createdAt).toLocaleDateString();
+  return (
+    <Card className="bg-muted">
+      <CardHeader>
+        <CardTitle>{job.position}</CardTitle>
+        <CardDescription>{job.company}</CardDescription>
+      </CardHeader>
+      <Separator />
+      <CardContent>{/* card info */}</CardContent>
+      <CardFooter className="flex gap-4">
+        <Button asChild size="sm">
+          <Link href={`/jobs/${job.id}`}>edit</Link>
+        </Button>
+        <DeleteJobButton />
+      </CardFooter>
+    </Card>
+  );
+}
+export default JobCard;
+```
+
+## Challenge - JobInfo
+
+1. **Define the JobInfo component**
+
+   - Define a function component named `JobInfo` that takes an object as a prop.
+   - This object should have `icon` and `text` properties.
+   - The `icon` property should be of type `React.ReactNode` and the `text` property should be of type `string`.
+
+2. **Create the component UI**
+
+   - In the component's return statement, create a `div` element with a `className` of 'flex gap-x-2 items-center'.
+   - Inside this `div`, render the `icon` and `text` props.
+
+3. **Export the JobInfo component**
+
+   - After defining the `JobInfo` component, export it so it can be used in other parts of your application.
+
+4. **Use the JobInfo component**
+   - In the `CardContent` component, use the `JobInfo` component four times.
+   - For each `JobInfo` component, pass an `icon` prop and a `text` prop.
+   - The `icon` prop should be a `Briefcase`, `MapPin`, `CalendarDays`, or `RadioTower` component.
+   - The `text` prop should be `job.mode`, `job.location`, `date`, or `job.status`.
+   - Wrap the last `JobInfo` component in a `Badge` component with a `className` of 'w-32 justify-center'.
+
+## JobInfo
+
+JobInfo.tsx
+
+```tsx
+function JobInfo({ icon, text }: { icon: React.ReactNode; text: string }) {
+  return (
+    <div className="flex gap-x-2 items-center">
+      {icon}
+      {text}
+    </div>
+  );
+}
+export default JobInfo;
+```
+
+JobCard.tsx
+
+```tsx
+<CardContent className="mt-4 grid grid-cols-2 gap-4">
+  <JobInfo icon={<Briefcase />} text={job.mode} />
+  <JobInfo icon={<MapPin />} text={job.location} />
+  <JobInfo icon={<CalendarDays />} text={date} />
+  <Badge className="w-32  justify-center">
+    <JobInfo icon={<RadioTower className="w-4 h-4" />} text={job.status} />
+  </Badge>
+</CardContent>
+```

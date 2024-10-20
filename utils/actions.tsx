@@ -114,6 +114,58 @@ export async function deleteJobAction(id: string): Promise<JobType | null> {
   }
 }
 
+export async function getSingleJobAction(id: string) {
+  const user = await authenticateAndRedirect();
+  let job: JobType | null = null;
+  try {
+    job = await prisma.job.findFirst({
+      where: {
+        clerkId: user.id,
+        id,
+      },
+    });
+    if (!job) {
+      throw new Error("No job found!");
+    }
+  } catch (e) {
+    console.log(e);
+    redirect("/jobs");
+  }
+  return job;
+}
+
+export async function updateJobAction(
+  id: string,
+  values: CreateAndEditJobType
+): Promise<JobType | null> {
+  const user = await authenticateAndRedirect();
+  let job: JobType | null = null;
+  try {
+    job = await prisma.job.findFirst({
+      where: {
+        clerkId: user.id,
+        id,
+      },
+    });
+    if (!job) {
+      throw new Error("No job found!");
+    }
+    await prisma.job.update({
+      where: {
+        id,
+        clerkId: user.id,
+      },
+      data: {
+        ...values,
+      },
+    });
+  } catch (e) {
+    console.log(e);
+    redirect("/jobs");
+  }
+  return job;
+}
+
 const renderError = (error: Error | string | unknown): { message: string } => {
   return {
     message: error instanceof Error ? error.message : "An error ocurred...",

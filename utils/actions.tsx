@@ -73,20 +73,27 @@ export async function getAllJobsAction({
         ],
       };
     }
+    const skip = (page - 1) * limit;
 
     const job: JobType[] = await prisma.job.findMany({
       where: {
         ...whereClause,
       },
+      skip,
+      take: limit,
       orderBy: {
         updatedAt: "desc",
       },
     });
+    const count: number = await prisma.job.count({
+      where: whereClause,
+    });
+    const totalPages = Math.ceil(count / limit);
 
-    return { jobs: job, count: 0, page: 1, totalPages: 0 };
+    return { jobs: job, count, page, totalPages };
   } catch (e) {
     console.log(e);
-    return { jobs: [], count: 0, page: 0, totalPages: 0 };
+    return { jobs: [], count: 0, page: 1, totalPages: 0 };
   }
 }
 
@@ -200,7 +207,7 @@ type Charts = Array<{ date: string; count: number }>;
 export async function getChartsAction(): Promise<Charts | null> {
   const user = await authenticateAndRedirect();
   try {
-    const elevenMonthsAgo = dayjs().subtract(11, "months").toDate();
+    const elevenMonthsAgo = dayjs().subtract(24, "months").toDate();
 
     const jobs = await prisma.job.findMany({
       where: {

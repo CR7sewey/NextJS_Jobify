@@ -2888,3 +2888,156 @@ function loading() {
 }
 export default loading;
 ```
+
+## Explore Re-charts Library
+
+[docs](https://recharts.org/en-US)
+
+## Challenge - ChartsContainer
+
+1. **Import necessary libraries and components**
+
+   - Import `useQuery` from the react-query library.
+   - Import `ResponsiveContainer`, `BarChart`, `CartesianGrid`, `XAxis`, `YAxis`, `Tooltip`, and `Bar` from recharts, a composable charting library built on React components.
+
+2. **Define the ChartsContainer component**
+
+   - Define a function component named `ChartsContainer`.
+
+3. **Use the useQuery hook**
+
+   - Inside `ChartsContainer`, call the `useQuery` hook and destructure `data`, `isPending` from its return value.
+   - Pass an object to `useQuery` with `queryKey` and `queryFn` properties.
+   - The `queryKey` property should be an array with a unique key.
+   - The `queryFn` property should be a function that fetches the data you want to display in the chart.
+
+4. **Handle the loading state**
+
+   - Inside `ChartsContainer`, add a conditional return statement that checks if `isPending` is true.
+   - If `isPending` is true, return a `h2` element with a message indicating that the data is loading.
+
+5. **Handle the empty data state**
+
+   - After the loading state check, add a conditional return statement that checks if `data` is null or `data.length` is less than 1.
+   - If the condition is true, return null.
+
+6. **Render the chart**
+
+   - After the empty data state check, return a `section` element.
+   - Inside the `section` element, render a `h1` element with a title for the chart.
+   - After the `h1` element, render a `ResponsiveContainer` component.
+   - Inside the `ResponsiveContainer` component, render a `BarChart` component.
+   - Pass the `data` to the `BarChart` component.
+   - Inside the `BarChart` component, render `CartesianGrid`, `XAxis`, `YAxis`, `Tooltip`, and `Bar` components.
+   - Pass appropriate props to each component.
+
+7. **Export the ChartsContainer component**
+   - After defining the `ChartsContainer` component, export it so it can be used in other parts of your application.
+
+## ChartsContainer
+
+```tsx
+"use client";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+
+import { useQuery } from "@tanstack/react-query";
+import { getChartsDataAction } from "@/utils/actions";
+function ChartsContainer() {
+  const { data, isPending } = useQuery({
+    queryKey: ["charts"],
+    queryFn: () => getChartsDataAction(),
+  });
+
+  if (isPending) return <h2 className="text-xl font-medium">Please wait...</h2>;
+  if (!data || data.length < 1) return null;
+  return (
+    <section className="mt-16">
+      <h1 className="text-4xl font-semibold text-center">
+        Monthly Applications
+      </h1>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={data} margin={{ top: 50 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="date" />
+          <YAxis allowDecimals={false} />
+          <Tooltip />
+          <Bar dataKey="count" fill="#2563eb" barSize={75} />
+        </BarChart>
+      </ResponsiveContainer>
+    </section>
+  );
+}
+export default ChartsContainer;
+```
+
+## Refactor
+
+```ts
+export async function getAllJobsAction({
+  search,
+  jobStatus,
+  page = 1,
+  limit = 10,
+}: GetAllJobsActionTypes): Promise<{
+  jobs: JobType[];
+  count: number;
+  page: number;
+  totalPages: number;
+}> {
+  const userId = authenticateAndRedirect();
+
+  try {
+    let whereClause: Prisma.JobWhereInput = {
+      clerkId: userId,
+    };
+    if (search) {
+      whereClause = {
+        ...whereClause,
+        OR: [
+          {
+            position: {
+              contains: search,
+            },
+          },
+          {
+            company: {
+              contains: search,
+            },
+          },
+        ],
+      };
+    }
+    if (jobStatus && jobStatus !== "all") {
+      whereClause = {
+        ...whereClause,
+        status: jobStatus,
+      };
+    }
+    const skip = (page - 1) * limit;
+
+    const jobs: JobType[] = await prisma.job.findMany({
+      where: whereClause,
+      skip,
+      take: limit,
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+    const count: number = await prisma.job.count({
+      where: whereClause,
+    });
+    const totalPages = Math.ceil(count / limit);
+  } catch (error) {
+    console.error(error);
+    return { jobs: [], count: 0, page: 1, totalPages: 0 };
+  }
+}
+```

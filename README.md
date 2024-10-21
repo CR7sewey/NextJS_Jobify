@@ -2691,3 +2691,200 @@ async function StatsPage() {
 }
 export default StatsPage;
 ```
+
+## Explore - Shadcn/ui Skeleton component
+
+- install
+
+```sh
+npx shadcn@latest add skeleton
+
+```
+
+[docs](https://ui.shadcn.com/docs/components/skeleton)
+
+## Challenge - StatsCard
+
+- create StatsCard component
+
+1. **Import necessary libraries and components for StatsCards**
+
+   - Import `Card`, `CardDescription`, `CardHeader`, and `CardTitle` from your UI components directory.
+
+2. **Define the StatsCards component**
+
+   - Define a function component named `StatsCards` that takes `title` and `value` as props.
+   - In the component's return statement, create the component UI using the `Card`, `CardHeader`, `CardTitle`, and `CardDescription` components.
+   - The `Card` component should have a `CardHeader` child.
+   - The `CardHeader` component should have `CardTitle` and `CardDescription` children.
+   - The `CardTitle` component should display the `title` prop.
+   - The `CardDescription` component should display the `value` prop.
+
+3. **Export the StatsCards component**
+
+   - After defining the `StatsCards` component, export it so it can be used in other parts of your application.
+
+4. **Import necessary libraries and components for StatsLoadingCard**
+
+   - Import `React` from the react library.
+   - Import `Card`, `CardHeader` from your UI components directory.
+   - Import `Skeleton` from your UI components directory.
+
+5. **Define the StatsLoadingCard component**
+
+   - Define a function component named `StatsLoadingCard`.
+   - In the component's return statement, create the component UI using the `Card`, `CardHeader`, and `Skeleton` components.
+   - The `Card` component should have a `CardHeader` child.
+   - The `CardHeader` component should have a div child with two `Skeleton` children.
+   - The div element should have a `className` of 'space-y-2'.
+   - The first `Skeleton` component should have a `className` of 'h-12 w-12 rounded-full'.
+   - The second `Skeleton` component should have a `className` of 'h-4 w-[150px]'.
+   - The third `Skeleton` component should have a `className` of 'h-4 w-[100px]'.
+
+6. **Export the StatsLoadingCard component**
+   - After defining the `StatsLoadingCard` component, export it so it can be used in other parts of your application.
+
+## StatsCard
+
+```tsx
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
+import { Skeleton } from "./ui/skeleton";
+
+type StatsCardsProps = {
+  title: string;
+  value: number;
+};
+
+function StatsCards({ title, value }: StatsCardsProps) {
+  return (
+    <Card className="bg-muted">
+      <CardHeader className="flex flex-row justify-between items-center">
+        <CardTitle className="capitalize">{title}</CardTitle>
+        <CardDescription className="text-4xl font-extrabold text-primary mt-[0px!important]">
+          {value}
+        </CardDescription>
+      </CardHeader>
+    </Card>
+  );
+}
+
+export function StatsLoadingCard() {
+  return (
+    <Card className="w-[330px] h-[88px]">
+      <CardHeader className="flex flex-row justify-between items-center">
+        <div className="flex items-center space-x-4">
+          <Skeleton className="h-12 w-12 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-[150px]" />
+            <Skeleton className="h-4 w-[100px]" />
+          </div>
+        </div>
+      </CardHeader>
+    </Card>
+  );
+}
+
+export default StatsCards;
+```
+
+## Challenge - StatsContainer
+
+1. **Import necessary libraries and components**
+
+   - Import `useQuery` from the `@tanstack/react-query` library.
+   - Import `getStatsAction` from your actions file.
+   - Import `StatsCard` and `StatsLoadingCard` from your components directory.
+
+2. **Define the StatsContainer component**
+
+   - Define a function component named `StatsContainer`.
+
+3. **Use the useQuery hook**
+
+   - Inside `StatsContainer`, call the `useQuery` hook and destructure `data` and `isPending` from its return value.
+   - Pass an object to `useQuery` with `queryKey` and `queryFn` properties.
+   - The `queryKey` property should be an array with 'stats'.
+   - The `queryFn` property should be a function that calls `getStatsAction`.
+
+4. **Handle the loading state**
+
+   - Inside `StatsContainer`, add a conditional return statement that checks if `isPending` is true.
+   - If `isPending` is true, return a `div` element with three `StatsLoadingCard` children.
+
+5. **Handle the data state**
+
+   - After the loading state check, return a `div` element with three `StatsCard` children.
+   - Each `StatsCard` should have `title` and `value` props.
+   - The `title` prop should be a string that describes the data.
+   - The `value` prop should be a value from the data object or 0 if the value is undefined.
+
+6. **Export the StatsContainer component**
+   - After defining the `StatsContainer` component, export it so it can be used in other parts of your application.
+
+## StatsContainer
+
+```tsx
+'use client';
+import { useQuery } from '@tanstack/react-query';
+import { getStatsAction } from '@/utils/actions';
+import StatsCardfrom './StatsCard';
+
+function StatsContainer() {
+  const { data } = useQuery({
+    queryKey: ['stats'],
+    queryFn: () => getStatsAction(),
+  });
+
+
+
+  return (
+    <div className='grid md:grid-cols-2 gap-4 lg:grid-cols-3'>
+      <StatsCard title='pending jobs' value={data?.pending || 0} />
+      <StatsCard title='interviews set' value={data?.interview || 0} />
+      <StatsCard title='jobs declined' value={data?.declined || 0} />
+    </div>
+  );
+}
+export default StatsContainer;
+```
+
+## Setup Loading
+
+stats/loading.tsx
+
+```tsx
+import { StatsLoadingCard } from "@/components/StatsCard";
+function loading() {
+  return (
+    <div className="grid md:grid-cols-2 gap-4 lg:grid-cols-3">
+      <StatsLoadingCard />
+      <StatsLoadingCard />
+      <StatsLoadingCard />
+    </div>
+  );
+}
+export default loading;
+```
+
+jobs/loading.tsx
+
+```tsx
+import { Skeleton } from "@/components/ui/skeleton";
+
+function loading() {
+  return (
+    <div className="p-8 grid sm:grid-cols-2 md:grid-cols-3  gap-4 rounded-lg border">
+      <Skeleton className="h-10" />
+      <Skeleton className="h-10 " />
+      <Skeleton className="h-10 " />
+    </div>
+  );
+}
+export default loading;
+```

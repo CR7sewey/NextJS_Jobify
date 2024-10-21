@@ -3041,3 +3041,240 @@ export async function getAllJobsAction({
   }
 }
 ```
+
+## Create ButtonContainer
+
+```tsx
+"use client";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+
+type ButtonContainerProps = {
+  currentPage: number;
+  totalPages: number;
+};
+import { Button } from "./ui/button";
+function ButtonContainer({ currentPage, totalPages }: ButtonContainerProps) {
+  return <h2 className="text-4xl">button container</h2>;
+}
+export default ButtonContainer;
+```
+
+## Refactor JobsList
+
+```tsx
+const jobs = data?.jobs || [];
+// add
+  const count = data?.count || 0;
+  const page = data?.page || 0;
+  const totalPages = data?.totalPages || 0;
+
+  if (isPending) return <h2 className='text-xl'>Please Wait...</h2>;
+
+  if (jobs.length < 1) return <h2 className='text-xl'>No Jobs Found...</h2>;
+  return (
+    <>
+      <div className='flex items-center justify-between mb-8'>
+        <h2 className='text-xl font-semibold capitalize '>
+          {count} jobs found
+        </h2>
+        {totalPages < 2 ? null : (
+          <ButtonContainer currentPage={page} totalPages={totalPages} />
+        )}
+      </div>
+    <>
+```
+
+## ButtonContainer
+
+```tsx
+"use client";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+
+type ButtonContainerProps = {
+  currentPage: number;
+  totalPages: number;
+};
+import { Button } from "./ui/button";
+function ButtonContainer({ currentPage, totalPages }: ButtonContainerProps) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const pageButtons = Array.from({ length: totalPages }, (_, i) => i + 1);
+
+  const handlePageChange = (page: number) => {
+    const defaultParams = {
+      search: searchParams.get("search") || "",
+      jobStatus: searchParams.get("jobStatus") || "",
+      page: String(page),
+    };
+
+    let params = new URLSearchParams(defaultParams);
+
+    router.push(`${pathname}?${params.toString()}`);
+  };
+  return (
+    <div className="flex  gap-x-2">
+      {pageButtons.map((page) => {
+        return (
+          <Button
+            key={page}
+            size="icon"
+            variant={currentPage === page ? "default" : "outline"}
+            onClick={() => handlePageChange(page)}
+          >
+            {page}
+          </Button>
+        );
+      })}
+    </div>
+  );
+}
+export default ButtonContainer;
+```
+
+## ComplexButtonContainer
+
+```tsx
+"use client";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+
+type ButtonContainerProps = {
+  currentPage: number;
+  totalPages: number;
+};
+
+type ButtonProps = {
+  page: number;
+  activeClass: boolean;
+};
+
+import { Button } from "./ui/button";
+function ButtonContainer({ currentPage, totalPages }: ButtonContainerProps) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const pageButtons = Array.from({ length: totalPages }, (_, i) => i + 1);
+
+  const handlePageChange = (page: number) => {
+    const defaultParams = {
+      search: searchParams.get("search") || "",
+      jobStatus: searchParams.get("jobStatus") || "",
+      page: String(page),
+    };
+
+    let params = new URLSearchParams(defaultParams);
+
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const addPageButton = ({ page, activeClass }: ButtonProps) => {
+    return (
+      <Button
+        key={page}
+        size="icon"
+        variant={activeClass ? "default" : "outline"}
+        onClick={() => handlePageChange(page)}
+      >
+        {page}
+      </Button>
+    );
+  };
+
+  const renderPageButtons = () => {
+    const pageButtons = [];
+    // first page
+    pageButtons.push(
+      addPageButton({ page: 1, activeClass: currentPage === 1 })
+    );
+    // dots
+
+    if (currentPage > 3) {
+      pageButtons.push(
+        <Button size="icon" variant="outline" key="dots-1">
+          ...
+        </Button>
+      );
+    }
+    // one before current page
+    if (currentPage !== 1 && currentPage !== 2) {
+      pageButtons.push(
+        addPageButton({
+          page: currentPage - 1,
+          activeClass: false,
+        })
+      );
+    }
+    // current page
+    if (currentPage !== 1 && currentPage !== totalPages) {
+      pageButtons.push(
+        addPageButton({
+          page: currentPage,
+          activeClass: true,
+        })
+      );
+    }
+    // one after current page
+
+    if (currentPage !== totalPages && currentPage !== totalPages - 1) {
+      pageButtons.push(
+        addPageButton({
+          page: currentPage + 1,
+          activeClass: false,
+        })
+      );
+    }
+    if (currentPage < totalPages - 2) {
+      pageButtons.push(
+        <Button size="icon" variant="outline" key="dots-1">
+          ...
+        </Button>
+      );
+    }
+    pageButtons.push(
+      addPageButton({
+        page: totalPages,
+        activeClass: currentPage === totalPages,
+      })
+    );
+    return pageButtons;
+  };
+
+  return (
+    <div className="flex  gap-x-2">
+      {/* prev */}
+      <Button
+        className="flex items-center gap-x-2 "
+        variant="outline"
+        onClick={() => {
+          let prevPage = currentPage - 1;
+          if (prevPage < 1) prevPage = totalPages;
+          handlePageChange(prevPage);
+        }}
+      >
+        <ChevronLeft />
+        prev
+      </Button>
+      {renderPageButtons()}
+      {/* next */}
+      <Button
+        className="flex items-center gap-x-2 "
+        onClick={() => {
+          let nextPage = currentPage + 1;
+          if (nextPage > totalPages) nextPage = 1;
+          handlePageChange(nextPage);
+        }}
+        variant="outline"
+      >
+        next
+        <ChevronRight />
+      </Button>
+    </div>
+  );
+}
+export default ButtonContainer;
+```
+
+## THE END

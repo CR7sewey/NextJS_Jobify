@@ -6,6 +6,7 @@ import React from "react";
 import JobCard from "./JobCard";
 import { getJobs } from "@/utils/queryActions";
 import data1 from "../../prisma/data.json";
+import ButtonContainer from "./ButtonContainer";
 
 function JobsDisplay() {
   console.log(data1);
@@ -35,12 +36,24 @@ function JobsDisplay() {
   if (isError) {
     return redirect("/");
   }
+  const count = data?.count || 2000; // || 0
+  const page = data?.page || 1; // || 0
+  const totalPages = data?.totalPages || 200; // || 0;
+
   if (isPending) return <h2 className="text-xl">Please Wait...</h2>;
   if (jobs.length < 1) return <h2 className="text-xl">No Jobs Found...</h2>;
 
   return (
     <>
       {/*button container  */}
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-xl font-semibold capitalize ">
+          {count} jobs found
+        </h2>
+        {totalPages < 2 ? null : (
+          <ButtonContainer currentPage={page} totalPages={totalPages} />
+        )}
+      </div>
       <div className="grid md:grid-cols-2  gap-8">
         {jobs.map((job) => {
           return <JobCard key={job.id} job={job} />;
